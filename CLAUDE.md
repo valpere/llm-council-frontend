@@ -22,6 +22,7 @@ done
 ```
 
 This registers all project skills in `.claude/skills/` as slash commands in Claude Code.
+Note: `.claude/` is excluded from git by the global gitignore (`.*`), so skill files live only on the local filesystem and must be set up per machine using the snippet above.
 
 There is no test suite.
 
