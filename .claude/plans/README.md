@@ -2,7 +2,7 @@
 
 Implementation plans for the LLM Council frontend.
 
-Plans are created by the `/plan` skill. Each plan can be promoted to a GitHub issue.
+Plans are created by the `/backlog` skill. Each plan is promoted to a GitHub issue, then the plan file is deleted — the issue becomes the source of truth.
 
 ---
 
@@ -33,7 +33,7 @@ Every plan file starts with this YAML frontmatter:
 ---
 title: "Short human-readable title"
 type: bug           # bug | feature | task | chore
-priority: p0        # p0-critical | p1-high | p2-medium | p3-low
+priority: p0-critical  # p0-critical | p1-high | p2-medium | p3-low
 status: draft       # draft | ready | in-progress | done | blocked
 debt: quick-fix     # quick-fix | balanced | proper-refactor  (⚡/⚖️/🏗️)
 effort: s           # xs | s | m | l | xl
@@ -147,7 +147,7 @@ fix(scope): description ⚡
 
 ## GitHub Issue Creation
 
-After the plan is confirmed, `/plan` offers to create a GitHub issue:
+After the plan is confirmed, `/backlog` offers to create a GitHub issue:
 
 ```bash
 gh issue create \
@@ -159,13 +159,9 @@ gh issue create \
 
 ## Acceptance Criteria
 - [ ] ...
-
-**Plan:** `.claude/plans/{N}-{slug}.md`
 EOF
 )"
 ```
 
-The issue body uses only `## Summary` and `## Acceptance Criteria` from the plan —
-not the implementation details, which stay internal.
-
-After creation, fill `github_issue:` in the frontmatter with the issue number.
+Once the issue is created, **the plan file is deleted** — the GitHub issue becomes the
+source of truth. Plan files are scratch pads, not long-lived documents.

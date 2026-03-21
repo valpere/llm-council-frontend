@@ -17,16 +17,11 @@ Prevent wasted effort by aligning on approach before touching code. For trivial 
 (one-line fix, typo) skip this and just do it. For anything that touches more than one
 file or requires design decisions, plan first.
 
-## Content split: GitHub issue vs. plan file
+## Plan file lifecycle
 
-| Section | Lives in |
-|---------|----------|
-| Summary, Acceptance Criteria | GitHub issue body |
-| Implementation details, approach, code snippets | Plan file only |
-| Frontmatter (type, priority, labels, `github_issue`) | Plan file only |
-
-Do not duplicate Summary/AC between the two. The issue is the public "what and why";
-the plan file is the local "how".
+The plan file is a **scratch pad** — it exists only while writing the plan. Once a
+GitHub issue is created, the plan file is deleted and the issue becomes the source of
+truth. Put everything worth keeping (summary, AC, approach, risks) in the issue body.
 
 ---
 
