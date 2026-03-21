@@ -73,7 +73,7 @@ refactor/{description}        e.g. refactor/extract-sse-handler
 - 🏗️ proper: full refactor
 
 **Skills** (invoke with `/skill-name`):
-- `/plan` — read affected files, produce a structured plan, wait for confirmation before coding
+- `/backlog` — show top 5 backlog items or plan a specific task; reads affected files, writes a plan file, offers to create a GitHub issue
 - `/fix-review` — address Copilot PR comments (one round, Code Review Pyramid priority); does not merge
 - `/ship` — full PR lifecycle: lint → create PR → Copilot → fix → squash merge → checkout main
 - `/find-bugs` — 5-phase security/bug audit of current branch changes; report-only
