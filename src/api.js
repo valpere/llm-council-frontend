@@ -1,5 +1,16 @@
 /**
  * API client for the LLM Council backend.
+ *
+ * Adapter pattern: this module is the sole point of contact between the React
+ * frontend and the Go backend.  All network requests (`fetch` calls) and SSE
+ * stream parsing live here.  Components and App.jsx never call `fetch` or
+ * perform network requests directly — they only call methods on this `api`
+ * object and receive plain JS values, or provide an `onEvent(eventType, event)`
+ * callback that `sendMessageStream` calls.
+ *
+ * SSE boundary: `sendMessageStream` reads the raw ReadableStream and fires
+ * `onEvent` once per parsed SSE data line.  App.jsx owns all state mutations
+ * in response to those events; this module remains stateless.
  */
 
 const API_BASE = 'http://localhost:8001';
