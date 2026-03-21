@@ -75,7 +75,8 @@ isLoading              // True while SSE stream is active
   stage2: null | [{model, ranking, parsed_ranking}, ...],
   stage3: null | {model, response},
   metadata: null | {label_to_model, aggregate_rankings},
-  loading: { stage1: bool, stage2: bool, stage3: bool }
+  loading: { stage1: bool, stage2: bool, stage3: bool },
+  error?: string         // undefined unless an SSE error event occurs; ephemeral, not persisted
 }
 ```
 

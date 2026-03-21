@@ -12,6 +12,17 @@ npm run lint       # ESLint
 npm run preview    # serve the production build locally
 ```
 
+**Skill setup (one-time, per machine):**
+```bash
+mkdir -p ~/.claude/skills
+for skill in .claude/skills/*/; do
+  [ -d "$skill" ] || continue
+  ln -sfn "$(pwd)/$skill" ~/.claude/skills/"$(basename "$skill")"
+done
+```
+
+This registers all project skills in `.claude/skills/` as slash commands in Claude Code.
+
 There is no test suite.
 
 ## Architecture
@@ -27,7 +38,8 @@ The frontend is a single-page React app for the LLM Council system — a 3-stage
   stage2: null | [{model, ranking, parsed_ranking}],
   stage3: null | {model, response},
   metadata: null | {label_to_model, aggregate_rankings},
-  loading: {stage1, stage2, stage3}  // drives per-stage spinners
+  loading: {stage1, stage2, stage3},  // drives per-stage spinners
+  error?: string                     // undefined unless an SSE error event occurs; ephemeral, not persisted
 }
 ```
 
@@ -40,3 +52,47 @@ The frontend is a single-page React app for the LLM Council system — a 3-stage
 The Go backend repo is at `../llm-council-backend`. See `docs/api-contract.md` for endpoint shapes and `docs/streaming.md` for the full SSE event sequence.
 
 The backend must be running before starting the dev server. CORS is configured on the backend for `localhost:5173`.
+
+Backend config env vars relevant to frontend: `COUNCIL_MODELS` (comma-separated model list), `CHAIRMAN_MODEL` (Stage3 synthesizer), `TITLE_MODEL` (title generation model — runs in parallel with pipeline). Port is configurable via `PORT` (default 8001).
+
+## Workflow
+
+**Branch naming:**
+```
+feat/{short-description}      e.g. feat/stage3-error-ui
+fix/{description}             e.g. fix/loading-stage3-never-clears
+docs/{description}            e.g. docs/update-streaming-contract
+refactor/{description}        e.g. refactor/extract-sse-handler
+```
+
+**Commit format:** `fix(scope): description` / `feat(scope): description` / `docs: description`
+
+**Debt levels** — label all PRs and proposals:
+- ⚡ quick-fix: targeted, no refactor
+- ⚖️ balanced: sensible trade-offs
+- 🏗️ proper: full refactor
+
+**Skills** (invoke with `/skill-name`):
+- `/plan` — read affected files, produce a structured plan, wait for confirmation before coding
+- `/fix-review` — address Copilot PR comments (one round, Code Review Pyramid priority); does not merge
+- `/ship` — full PR lifecycle: lint → create PR → Copilot → fix → squash merge → checkout main
+- `/find-bugs` — 5-phase security/bug audit of current branch changes; report-only
+- `/improve` — research-first critic for plans and designs; SHIP IT / IMPROVE IT / RETHINK IT / KILL IT verdict
+
+**Agents** (invoked via `Agent` tool):
+- `tech-lead` — architectural authority; reviews plans before implementation and code before merging; enforces SSE adapter boundary, App.jsx state model, and security rules
+- `backend-sync` — runs hourly (cron re-created on SessionStart); checks backend git log,
+  SSE contract, issue #18 (CORS); exchanges notes via onlooking protocol
+- `bug-fixer` — surgical one-bug fix; one bug, one minimal fix, one commit
+- `code-simplifier` — behaviour-preserving JS refactor; no TypeScript, no test suite
+- `docs-maintainer` — post-merge doc sync for CLAUDE.md, docs/, and .proposals.md
+
+**Proposals:** open `.proposals.md` at repo root for pending ideas and design decisions.
+
+**Onlooking protocol:**
+- Outbox (sole writer): `../llm-council-backend/.claude/.onlooking-from-frontend.md` — always **append**, never overwrite
+- Inbox: `.claude/.onlooking-from-backend.md` — read with flock, truncate after processing
+
+## Known gaps
+
+- **`VITE_API_BASE` env var:** `API_BASE` in `src/api.js` is hardcoded. Needs env var support, coordinated with backend issue #18 (CORS origins configurable). Tracked in gh#10.
