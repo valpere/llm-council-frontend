@@ -25,7 +25,7 @@ The JSON object always has a `type` field. Additional fields depend on the event
 ←  complete
 ```
 
-`title_complete` is emitted concurrently with the stage pipeline (title is generated in a goroutine alongside Stage 1). It may arrive before or after `stage3_complete`.
+`title_complete` is emitted concurrently with the stage pipeline (title is generated in a goroutine alongside Stage 1). It may arrive before or after `stage3_complete`. In practice it currently always arrives after `stage3_complete` because the backend blocks on a channel after Stage 3; the spec allows either ordering and the frontend handles both correctly.
 
 ## Event Payloads
 
@@ -127,7 +127,7 @@ Stream is finished. The frontend sets `isLoading = false`.
 { "type": "error", "message": "all council models failed" }
 ```
 
-Stream terminates after this event.
+Stream terminates after this event. `stage3` will be `null` in the frontend state; only `error` is set.
 
 ## Frontend Implementation
 
@@ -163,4 +163,4 @@ while (true) {
 | `stage3_complete` | `stage3 = event.data`, `loading.stage3 = false` |
 | `title_complete` | reload conversation list |
 | `complete` | reload conversation list, `isLoading = false` |
-| `error` | log error, `isLoading = false` |
+| `error` | `msg.error = event.message`, `loading.stage3 = false`, `isLoading = false` |
