@@ -24,6 +24,8 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // Async data-fetching inside useEffect is an accepted pattern here
+      'react-hooks/set-state-in-effect': 'off',
     },
   },
 ])
