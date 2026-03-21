@@ -6,7 +6,7 @@ independently, evaluate each other anonymously, and a designated Chairman synthe
 the best final answer from all of that.
 
 This repository is the React UI. The backend is a separate Go service at
-[`llm-council-backend`](../llm-council-backend).
+[`llm-council-backend`](https://github.com/valpere/llm-council-backend).
 
 ---
 
@@ -50,7 +50,7 @@ Server-Sent Events.
 ## Prerequisites
 
 - Node.js 18+
-- The Go backend running on port 8001 (see [`llm-council-backend`](../llm-council-backend))
+- The Go backend running on port 8001 (see [`llm-council-backend`](https://github.com/valpere/llm-council-backend))
 
 ---
 
