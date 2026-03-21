@@ -33,6 +33,20 @@ The conversation is saved and can be revisited from the sidebar.
 
 ---
 
+## Tech stack
+
+| | |
+|---|---|
+| [React 19](https://react.dev) | UI framework |
+| [Vite 7](https://vite.dev) | Dev server and build tool |
+| [react-markdown](https://github.com/remarkjs/react-markdown) | Renders markdown in model responses |
+
+No state management library — all state lives in `App.jsx` and flows down via props.
+Communication with the backend uses the Fetch API with a `ReadableStream` reader for
+Server-Sent Events.
+
+---
+
 ## Prerequisites
 
 - Node.js 18+
