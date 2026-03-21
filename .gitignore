@@ -12,6 +12,19 @@ dist
 dist-ssr
 *.local
 
+# Claude Code project config (un-exclude from global gitignore's .* rule)
+!.claude/
+!.claude/agents/
+!.claude/agents/**
+!.claude/plans/
+!.claude/plans/**
+!.claude/skills/
+!.claude/skills/**
+# Keep ephemeral/local files excluded:
+.claude/.onlooking-from-backend.md
+.claude/.onlooking-from-backend.md.lock
+.claude/settings.local.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
