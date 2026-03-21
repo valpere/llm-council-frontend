@@ -76,7 +76,7 @@ isLoading              // True while SSE stream is active
   stage3: null | {model, response},
   metadata: null | {label_to_model, aggregate_rankings},
   loading: { stage1: bool, stage2: bool, stage3: bool },
-  error: null | string   // set when SSE emits {"type":"error","message":"..."}; ephemeral, not persisted
+  error?: string         // undefined unless an SSE error event occurs; ephemeral, not persisted
 }
 ```
 

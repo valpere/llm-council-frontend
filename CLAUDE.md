@@ -14,12 +14,14 @@ npm run preview    # serve the production build locally
 
 **Skill setup (one-time, per machine):**
 ```bash
+mkdir -p ~/.claude/skills
 for skill in .claude/skills/*/; do
+  [ -d "$skill" ] || continue
   ln -sfn "$(pwd)/$skill" ~/.claude/skills/"$(basename "$skill")"
 done
 ```
 
-This registers project skills (plan, ship, fix-review, find-bugs, improve) as slash commands in Claude Code.
+This registers all project skills in `.claude/skills/` as slash commands in Claude Code.
 
 There is no test suite.
 
@@ -37,7 +39,7 @@ The frontend is a single-page React app for the LLM Council system — a 3-stage
   stage3: null | {model, response},
   metadata: null | {label_to_model, aggregate_rankings},
   loading: {stage1, stage2, stage3},  // drives per-stage spinners
-  error: null | string               // set on SSE error event; ephemeral, not persisted
+  error?: string                     // undefined unless an SSE error event occurs; ephemeral, not persisted
 }
 ```
 
