@@ -131,23 +131,37 @@ Stream terminates after this event. The frontend sets `msg.error = event.message
 
 ## Frontend Implementation
 
-`src/api.js` reads the SSE stream using the Fetch API and a `ReadableStream` reader:
+`src/api.js` reads the SSE stream using the Fetch API and a `ReadableStream` reader. A line buffer handles SSE events that are split across TCP chunk boundaries:
 
 ```javascript
 const reader = response.body.getReader();
 const decoder = new TextDecoder();
+let buffer = '';
 
 while (true) {
   const { done, value } = await reader.read();
-  if (done) break;
 
-  const chunk = decoder.decode(value);
-  for (const line of chunk.split('\n')) {
+  // On done, flush the decoder; otherwise decode with stream:true to
+  // handle multi-byte characters split across chunk boundaries.
+  buffer += done ? decoder.decode() : decoder.decode(value, { stream: true });
+  const lines = buffer.split('\n');
+  // When not done, keep the last (potentially incomplete) line in the
+  // buffer. When done, process everything (no more chunks will arrive).
+  buffer = done ? '' : lines.pop();
+
+  for (const line of lines) {
     if (line.startsWith('data: ')) {
-      const event = JSON.parse(line.slice(6));
-      onEvent(event.type, event);
+      const data = line.slice(6);
+      try {
+        const event = JSON.parse(data);
+        onEvent(event.type, event);
+      } catch (e) {
+        console.error('Failed to parse SSE event:', e);
+      }
     }
   }
+
+  if (done) break;
 }
 ```
 
