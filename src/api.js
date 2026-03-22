@@ -13,7 +13,7 @@
  * in response to those events; this module remains stateless.
  */
 
-const API_BASE = 'http://localhost:8001';
+const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8001';
 
 export const api = {
   /**
