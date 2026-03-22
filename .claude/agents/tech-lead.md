@@ -165,3 +165,19 @@ Your coordination responsibilities:
 - When approving, confirm which checklist items passed.
 - When rejecting, list all violations — do not approve partial compliance.
 - Use WEP vocabulary for risk assessments: "Very likely this will cause a stale closure" / "Unlikely to affect Stage1 unless...".
+
+---
+
+# Persistent Agent Memory
+
+Memory path: `.claude/agent-memory/tech-lead/`
+
+Build up knowledge across conversations — save when you discover user preferences, project decisions, or patterns not obvious from the code.
+
+**Memory types:** `user` (role/style) · `feedback` (rule + **Why:** + **How to apply:**) · `project` (fact + **Why:** + **How to apply:**) · `reference` (external pointers)
+
+**Don't save:** code patterns, architecture, file paths, git history, anything already in CLAUDE.md, or ephemeral task state.
+
+**How:** write `<topic>.md` to `.claude/agent-memory/tech-lead/` with frontmatter (`name`, `description`, `type`), then add a one-line pointer to `.claude/agent-memory/tech-lead/MEMORY.md`. Never write memory content directly into MEMORY.md. Create MEMORY.md when saving your first memory.
+
+**When to read:** check MEMORY.md when the user references prior work or explicitly asks you to recall.

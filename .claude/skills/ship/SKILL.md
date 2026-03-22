@@ -4,9 +4,9 @@ description: Full issue lifecycle — pick an issue, branch, implement, PR, Copi
 user-invocable: true
 argument-hint: "[issue-number|issue-title] — omit to pick from the top 5 open issues"
 metadata:
-  version: "2.0"
+  version: "2.1"
   author: frontend-claude
-  last_updated: "2026-03-21"
+  last_updated: "2026-03-22"
 ---
 
 # /ship
@@ -59,19 +59,28 @@ Branch naming: `feat/…`, `fix/…`, `docs/…`, `refactor/…`, `chore/…`
 Read the issue. Make all necessary changes. Run lint after:
 
 ```bash
-npm run lint   # must pass before creating PR
+npm run lint   # must pass before continuing
 ```
 
 Commit with conventional format: `fix(scope): description` / `feat(scope): description`
 
-### 4. Pre-flight
+### 4. Pre-PR review (parallel)
+
+Before creating the PR, launch **security-reviewer** and **static-analysis** simultaneously in a single Agent tool call batch. Wait for both to complete.
+
+- **security-reviewer**: checks for XSS risks, injection, hardcoded secrets, insecure patterns
+- **static-analysis**: verifies lint passes and flags any cosmetic violations missed
+
+Address any CRITICAL or HIGH security findings and any remaining lint violations before continuing. LOW/MEDIUM security findings: note in the PR description.
+
+### 5. Pre-flight
 
 ```bash
 git status                         # nothing uncommitted
 git log main..HEAD --oneline       # commits look right
 ```
 
-### 5. Create PR
+### 6. Create PR
 
 Include `Closes #N` in the body so GitHub closes the issue on merge.
 
@@ -95,7 +104,7 @@ EOF
 
 Debt emoji in title: `⚡` quick-fix · `⚖️` balanced · `🏗️` proper-refactor
 
-### 6. Wait for Copilot — check yourself
+### 7. Wait for Copilot — check yourself
 
 ```bash
 gh pr view <number> --json reviews,statusCheckRollup
@@ -104,25 +113,29 @@ gh pr view <number> --json reviews,statusCheckRollup
 Poll every ~30s (timeout 5 min). Do not ask the user — check the status yourself.
 If Copilot doesn't review within 5 minutes, proceed to merge anyway.
 
-### 7. Address comments (if any)
+### 8. Address comments (if any)
 
-One round only. Fix all Copilot comments, push, then proceed to merge without waiting for re-review.
+One round only. Use the Code Review Pyramid to prioritise:
+- Layer 1 (Architecture) → Layer 2 (Correctness) → Layer 3 (Documentation)
+- Skip Layer 5 (Style) — automated by ESLint
 
-### 8. Merge
+Fix all actionable Copilot comments, push, then proceed to merge without waiting for re-review.
+
+### 9. Merge
 
 ```bash
 gh pr merge <number> --squash --delete-branch
 ```
 
-### 9. Return to main
+### 10. Return to main
 
 ```bash
 git checkout main && git pull
 ```
 
-### 10. Report
+### 11. Report
 
-Summarise: issue closed, PR number, what Copilot flagged (if anything), what was fixed, merge commit.
+Summarise: issue closed, PR number, what pre-PR review found (if anything), what Copilot flagged (if anything), what was fixed, merge commit.
 
 ## What NOT to do
 

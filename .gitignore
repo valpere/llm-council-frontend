@@ -20,6 +20,8 @@ dist-ssr
 !.claude/
 !.claude/agents/
 !.claude/agents/**
+!.claude/agent-memory/
+!.claude/agent-memory/**
 !.claude/plans/
 !.claude/plans/**
 !.claude/skills/
