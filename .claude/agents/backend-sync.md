@@ -1,11 +1,8 @@
 ---
 name: backend-sync
 description: Checks the llm-council-backend repo for SSE contract changes, new/closed issues, and merged PRs relevant to the frontend. Appends a timestamped note to the onlooking outbox for the backend Claude instance. Reads any pending inbound note and acts on it. Run hourly by cron (re-created on SessionStart).
-type: agents
-metadata:
-  version: "1.0"
-  author: frontend-claude
-  last_updated: "2026-03-21"
+tools: Read, Glob, Grep, Bash
+model: haiku
 ---
 
 # Backend Sync Agent
