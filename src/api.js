@@ -13,7 +13,16 @@
  * in response to those events; this module remains stateless.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8001';
+const API_BASE = (() => {
+  const raw = import.meta.env.VITE_API_BASE;
+  if (typeof raw !== 'string') {
+    return 'http://localhost:8001';
+  }
+  // Trim whitespace and strip trailing slashes so `${API_BASE}/api/...`
+  // does not produce `//api/...`. Treat empty/whitespace as "unset".
+  const trimmed = raw.trim().replace(/\/+$/, '');
+  return trimmed || 'http://localhost:8001';
+})();
 
 export const api = {
   /**
