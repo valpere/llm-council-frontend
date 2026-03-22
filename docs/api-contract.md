@@ -1,6 +1,13 @@
 # API Contract
 
-The frontend communicates with the Go backend (port 8001) via REST + Server-Sent Events. All requests and responses use JSON.
+The frontend communicates with the Go backend (port 8001 by default) via REST + Server-Sent Events. All requests and responses use JSON.
+
+## Design Constraints
+
+- **One question per conversation.** Each conversation stores exactly one user message and one assistant message. Sending a second message to an existing conversation is not supported by the UI — the frontend creates a new conversation for each question.
+- **`metadata` is ephemeral.** The `label_to_model` and `aggregate_rankings` fields are only returned during the streaming response and are not persisted. `GET /api/conversations/{id}` does not include them.
+
+---
 
 ## Endpoints
 
@@ -85,7 +92,7 @@ Response:
 }
 ```
 
-Note: `metadata` (label_to_model, aggregate_rankings) is **not persisted** — it is only returned during the streaming response. Loaded conversations from `GET` will not include it.
+Note: `metadata` (`label_to_model`, `aggregate_rankings`) is **not persisted** — it is only returned during the streaming response. `GET` responses will not include it.
 
 ---
 
@@ -138,9 +145,11 @@ Response: `text/event-stream` (Server-Sent Events). See [streaming.md](./streami
 
 ## Data Types
 
+> These are JSON object shapes. Property types use pseudocode notation (`string`, `number`, `bool`, `array[]`).
+
 ### ConversationMeta
 
-```typescript
+```
 {
   id: string           // UUID v4
   created_at: string   // RFC 3339 / ISO 8601
@@ -151,7 +160,7 @@ Response: `text/event-stream` (Server-Sent Events). See [streaming.md](./streami
 
 ### Conversation
 
-```typescript
+```
 {
   id: string
   created_at: string
@@ -162,7 +171,7 @@ Response: `text/event-stream` (Server-Sent Events). See [streaming.md](./streami
 
 ### UserMessage
 
-```typescript
+```
 {
   role: "user"
   content: string
@@ -171,7 +180,7 @@ Response: `text/event-stream` (Server-Sent Events). See [streaming.md](./streami
 
 ### AssistantMessage (stored)
 
-```typescript
+```
 {
   role: "assistant"
   stage1: StageOneResult[]
@@ -182,38 +191,40 @@ Response: `text/event-stream` (Server-Sent Events). See [streaming.md](./streami
 
 ### StageOneResult
 
-```typescript
+```
 { model: string; response: string }
 ```
 
 ### StageTwoResult
 
-```typescript
+```
 {
   model: string
-  ranking: string          // Full text from the model (used for display)
-  parsed_ranking: string[] // Extracted ordered list: ["Response C", "Response A", ...]
+  ranking: string           // full evaluation text from the model
+  parsed_ranking: string[]  // extracted ordered list: ["Response C", "Response A", ...]
 }
 ```
 
 ### StageThreeResult
 
-```typescript
+```
 { model: string; response: string }
 ```
 
-### Metadata (ephemeral, not stored)
+### Metadata (ephemeral — streaming response only, not stored)
 
-```typescript
+```
 {
-  label_to_model: Record<string, string>   // "Response A" → "openai/gpt-5.1"
+  label_to_model: { [label: string]: string }  // "Response A" → "openai/gpt-5.1"
   aggregate_rankings: {
     model: string
-    average_rank: number
+    average_rank: number      // lower is better (1.0 = always ranked first)
     rankings_count: number
   }[]
 }
 ```
+
+---
 
 ## CORS
 
