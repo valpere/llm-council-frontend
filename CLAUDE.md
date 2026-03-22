@@ -50,7 +50,12 @@ The frontend is a single-page React app for the LLM Council system — a 3-stage
 
 ## Backend
 
-The Go backend repo is at `../llm-council-backend`. See `docs/api-contract.md` for endpoint shapes, `docs/streaming.md` for the full SSE event sequence, and `docs/development-workflow.md` for skills, agents, and the end-to-end development process.
+The Go backend repo is at `../llm-council-backend`. Docs:
+- `docs/user-guide.md` — how to use the app (UI, three stages, limitations)
+- `docs/api-contract.md` — REST endpoint shapes and JSON types
+- `docs/streaming.md` — SSE event sequence and payload formats
+- `docs/architecture.md` — component tree, state model, layered architecture
+- `docs/development-workflow.md` — skills, agents, pipelines, conventions
 
 The backend must be running before starting the dev server. CORS is configured on the backend for `localhost:5173`.
 
