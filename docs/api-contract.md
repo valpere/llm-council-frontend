@@ -1,6 +1,6 @@
 # API Contract
 
-The frontend communicates with the Go backend (port 8001 by default) via REST + Server-Sent Events. All requests and responses use JSON.
+The frontend communicates with the Go backend (port 8001 by default) via REST + Server-Sent Events. REST endpoints send and receive JSON bodies, while the streaming endpoint uses `text/event-stream` (SSE) and emits events whose `data:` fields contain JSON payloads.
 
 ## Design Constraints
 
