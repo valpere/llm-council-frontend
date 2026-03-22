@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Un-exclude from global gitignore's .* rule
+!.env.example
+
 # Claude Code project config (un-exclude from global gitignore's .* rule)
 !.claude/
 !.claude/agents/
