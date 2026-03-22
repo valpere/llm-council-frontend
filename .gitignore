@@ -14,6 +14,7 @@ dist-ssr
 
 # Un-exclude from global gitignore's .* rule
 !.env.example
+!.npmrc
 
 # Claude Code project config (un-exclude from global gitignore's .* rule)
 !.claude/
