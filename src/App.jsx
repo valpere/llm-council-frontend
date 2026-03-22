@@ -81,6 +81,7 @@ function App() {
           stage2: false,
           stage3: false,
         },
+        error: null,
       };
 
       // Add the partial assistant message
