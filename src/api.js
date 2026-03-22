@@ -106,12 +106,14 @@ export const api = {
 
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
 
-      buffer += decoder.decode(value, { stream: true });
+      // On done, flush the decoder; otherwise decode with stream:true to
+      // handle multi-byte characters split across chunk boundaries.
+      buffer += done ? decoder.decode() : decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
-      // Keep the last (potentially incomplete) line in the buffer
-      buffer = lines.pop();
+      // When not done, keep the last (potentially incomplete) line in the
+      // buffer. When done, process everything (no more chunks will arrive).
+      buffer = done ? '' : lines.pop();
 
       for (const line of lines) {
         if (line.startsWith('data: ')) {
@@ -124,6 +126,8 @@ export const api = {
           }
         }
       }
+
+      if (done) break;
     }
   },
 };
