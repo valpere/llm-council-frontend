@@ -44,7 +44,7 @@ The frontend is a single-page React app for the LLM Council system — a 3-stage
 }
 ```
 
-**`src/api.js`** is the single API client. `API_BASE` is hardcoded to `http://localhost:8001` (the Go backend). The streaming method reads a `ReadableStream` and calls `onEvent(eventType, event)` for each SSE `data:` line.
+**`src/api.js`** is the single API client. `API_BASE` is read from `VITE_API_BASE` env var (defaults to `http://localhost:8001`). The streaming method reads a `ReadableStream` and calls `onEvent(eventType, event)` for each SSE `data:` line.
 
 **`src/components/Stage2.jsx`** does de-anonymization: Stage 2 responses from the backend use labels (`Response A`, `Response B`, ...) and `Stage2.jsx` replaces them with bold model names using `metadata.label_to_model`. This mapping is ephemeral — not stored by the backend — so it is only available during and immediately after the streaming response, not when loading a saved conversation.
 
@@ -82,11 +82,17 @@ refactor/{description}        e.g. refactor/extract-sse-handler
 
 **Agents** (invoked via `Agent` tool):
 - `tech-lead` — architectural authority; reviews plans before implementation and code before merging; enforces SSE adapter boundary, App.jsx state model, and security rules
-- `backend-sync` — runs hourly (cron re-created on SessionStart); checks backend git log,
-  SSE contract, issue #18 (CORS); exchanges notes via onlooking protocol
+- `backend-sync` — runs hourly (cron re-created on SessionStart); checks backend git log, SSE contract; exchanges notes via onlooking protocol
 - `bug-fixer` — surgical one-bug fix; one bug, one minimal fix, one commit
 - `code-simplifier` — behaviour-preserving JS refactor; no TypeScript, no test suite
 - `docs-maintainer` — post-merge doc sync for CLAUDE.md, docs/, and .proposals.md
+- `security-reviewer` — OWASP/XSS security audit of recently changed code; report-only
+- `static-analysis` — ESLint cosmetic fixes only; flags semantic violations for escalation
+- `code-generator` — full issue implementation lifecycle: branch → code → parallel review → PR
+- `pm-issue-writer` — translates informal requests into RFC 2119-compliant GitHub issue drafts
+- `ci-build-agent` — GitHub Actions workflow creation and CI pipeline maintenance
+
+All agents have persistent memory in `.claude/agent-memory/<agent-name>/`.
 
 **Proposals:** open `.proposals.md` at repo root for pending ideas and design decisions.
 
@@ -96,4 +102,4 @@ refactor/{description}        e.g. refactor/extract-sse-handler
 
 ## Known gaps
 
-- **`VITE_API_BASE` env var:** `API_BASE` in `src/api.js` is hardcoded. Needs env var support, coordinated with backend issue #18 (CORS origins configurable). Tracked in gh#10.
+No known gaps currently.

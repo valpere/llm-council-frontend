@@ -4,7 +4,7 @@ description: Address Copilot review comments on the current open PR, or review a
 user-invocable: true
 argument-hint: "[pr-number] — defaults to the PR for the current branch"
 metadata:
-  version: "1.2"
+  version: "1.3"
   author: frontend-claude
   last_updated: "2026-03-22"
 ---
@@ -125,24 +125,50 @@ Package, old → new version, bump level, any findings, merge commit or reason b
 
 ## Copilot review flow
 
+### Code Review Pyramid
+
+All Copilot comments are classified by pyramid layer before fixing. Fix from the bottom up — highest value is at the base.
+
+```
+        ▲
+       /5\         Style          → NEVER fixed — automated by ESLint
+      /---\
+     / 4   \       Tests          → N/A (no test suite)
+    /-------\
+   /    3    \     Documentation  → Is complex logic explained?
+  /           \
+ /      2      \   Correctness    → Bugs, null checks, stale closures, security, performance
+/_______________\
+       1          Architecture   → SSE adapter boundary, App.jsx state model, design flaws
+```
+
+**Fix priority order (within a PR):**
+1. Layer 1 errors
+2. Layer 1 warnings
+3. Layer 2 errors
+4. Layer 2 warnings
+5. Layer 3 issues
+6. Suggestions (any layer)
+
+**Why this order matters:** An architectural flaw (Layer 1) can make correctness fixes (Layer 2) irrelevant — polishing broken scaffolding. Fix the foundation first.
+
+### Layer Reference
+
+| Layer | Concern | Examples |
+|-------|---------|---------|
+| **1** | Architecture & design | SSE adapter boundary violation, state mutation outside App.jsx, wrong abstraction |
+| **2** | Correctness | Bugs, null handling gaps, missing error branches, stale closures, race conditions, security |
+| **3** | Documentation | Complex logic without comment, misleading naming, undocumented non-obvious behaviour |
+| **4** | Tests | N/A — project has no test suite |
+| **5** | Style | Formatting — automated by ESLint, **never hand-fixed** |
+
 ### Rules
 
 - Process **one round** of Copilot comments only. Do not loop waiting for a second review.
 - If a comment conflicts with project decisions (CLAUDE.md, memory), note the conflict and skip rather than blindly applying.
 - If the PR has no unresolved Copilot comments, report that and stop.
 
-### Code Review Pyramid — Prioritisation
-
-When multiple comments exist, address them in this order (highest impact first):
-
-| Layer | Concern | Examples |
-|-------|---------|---------|
-| 1 (highest) | Architecture & design | Wrong abstraction, breaking state contract, SSE adapter boundary violation |
-| 2 | Correctness | Bugs, null handling gaps, missing error branches, race conditions, security |
-| 3 | Documentation | Complex logic without comment, misleading naming, undocumented non-obvious behaviour |
-| 4 (skip) | Style | Formatting — automated by ESLint, do not hand-fix |
-
-*(No Layer 4 Tests — project has no test suite.)*
+### Rulings
 
 For each comment, assign a ruling before deciding what to do:
 
@@ -150,7 +176,7 @@ For each comment, assign a ruling before deciding what to do:
 |--------|---------|--------|
 | **CONFIRM** | Real issue, model was right | Fix it |
 | **ESCALATE** | Real issue, more severe than flagged | Fix it, note severity upgrade |
-| **DISMISS** | False positive or conflicts with project patterns (CLAUDE.md) | Skip, note reason |
+| **DISMISS** | False positive or conflicts with project patterns | Skip, note reason |
 | **DEFER** | Real but out of scope for this PR | Log only, do not fix |
 
 ### Steps
@@ -167,25 +193,28 @@ For each comment, assign a ruling before deciding what to do:
    ```
    Filter to comments from `copilot-pull-request-reviewer` or `github-advanced-security`.
 
-3. **Implement fixes** — read the relevant files, apply changes. Keep fixes minimal (⚡ scope unless the comment explicitly requests more). Do not refactor surrounding code.
+3. **Classify each comment** by pyramid layer. Sort by fix priority order before implementing.
 
-4. **Lint:**
+4. **Implement fixes** — read the relevant files, apply changes. Keep fixes minimal (⚡ scope unless the comment explicitly requests more). Do not refactor surrounding code.
+
+5. **Lint:**
    ```bash
    npm run lint
    ```
    Fix any new lint errors introduced.
 
-5. **Commit and push:**
+6. **Commit and push:**
    ```bash
    git add <changed files>
    git commit -m "fix-review: address Copilot comments"
    git push
    ```
 
-6. **Report** — list each comment addressed and what was done. Note any comments skipped and why.
+7. **Report** — list each comment with its ruling (CONFIRM/ESCALATE/DISMISS/DEFER) and what was done. Note any comments skipped and why.
 
 ## What NOT to do
 
 - Do not merge the PR — that is `/ship`'s job (except Dependabot patches/minor above).
 - Do not wait for a new Copilot review cycle.
 - Do not open new issues or PRs.
+- Do not fix Layer 5 (style) comments — ESLint handles those.
