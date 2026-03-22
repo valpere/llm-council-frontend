@@ -24,7 +24,7 @@ gh pr view <number> --json author,title,headRefName,body
 
 ## Dependabot flow
 
-No Copilot wait needed — merge decision is based on the bump level alone.
+No Copilot wait needed — bump level determines the workflow: patches can be merged immediately, while minor and major bumps require the checks described below (with major bumps always closed after creating a tracking issue).
 
 ### 1. Read the PR
 
@@ -54,7 +54,7 @@ Extract: package name, old version, new version.
 
 ### 3a. Major bump — write plan, create issue, close PR
 
-1. **Write a plan file** to `.claude/plans/1-migrate-<package>-v<N>.md`:
+1. **Write a plan file** to `.claude/plans/1-migrate-<package>-v<N>.md` where `<package>` is a slugified package name (strip leading `@`, replace `/` with `-`; e.g. `@scope/name` → `scope-name`):
 
 ```markdown
 ---
@@ -84,8 +84,11 @@ updated: <YYYY-MM-DD>
    - Step-by-step migration approach
    - Risks and unknowns
 
-2. **Invoke `/backlog`** — it will deduplicate, create the GitHub issue, and delete the plan file.
-   Record the issue number it returns.
+2. **Invoke `/backlog` for the just-created plan**:
+   - Run `/backlog` with no arguments.
+   - When prompted to choose a plan file, enter the path to the plan you just created (e.g. `.claude/plans/1-migrate-<package>-v<new>.md`).
+   - Confirm creation of the GitHub issue when `/backlog` asks.
+   - `/backlog` will deduplicate, create the GitHub issue, and delete the plan file. Record the issue number it returns.
 
 3. **Comment on the Dependabot PR** referencing the issue:
    ```bash
