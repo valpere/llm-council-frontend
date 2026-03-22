@@ -102,13 +102,18 @@ export const api = {
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
+    let buffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
 
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
+      // On done, flush the decoder; otherwise decode with stream:true to
+      // handle multi-byte characters split across chunk boundaries.
+      buffer += done ? decoder.decode() : decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      // When not done, keep the last (potentially incomplete) line in the
+      // buffer. When done, process everything (no more chunks will arrive).
+      buffer = done ? '' : lines.pop();
 
       for (const line of lines) {
         if (line.startsWith('data: ')) {
@@ -121,6 +126,8 @@ export const api = {
           }
         }
       }
+
+      if (done) break;
     }
   },
 };
