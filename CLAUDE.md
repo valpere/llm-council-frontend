@@ -130,6 +130,15 @@ scheduled self-review (drift from `context-essentials.md`, recurring
 the systemd timer setup. Reports land in `.claude/dreaming/reports/`,
 applied via `/apply-dreaming`.
 
+## Self-Learning Hard Rules
+
+- **Never amend or force-push a commit that has already been pushed to the
+  remote.** *(promoted 2026-08-23 — 2 mistakes: 2026-07-28, 2026-07-29)*
+  Always create a new commit for additional changes instead — even on a
+  solo branch, even if the amend would be "cleaner." Amending/force-pushing
+  a published commit rewrites history a reviewer or CI run may already
+  reference.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
