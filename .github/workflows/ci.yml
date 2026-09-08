@@ -1,12 +1,22 @@
 name: CI
 
+# Least-privilege: checkout only needs read; upload-artifact needs actions:write.
+permissions:
+  contents: read
+  actions: write
+
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a main run — each successful main run is a coverage data
+  # point for /housekeeping's Check 7 (CI Coverage Delta).
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   validate:
@@ -24,7 +34,15 @@ jobs:
 
       - run: npm run lint
 
-      - run: npm test
+      - run: npm run test:coverage
+
+      - name: Upload coverage summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-summary
+          path: coverage/coverage-summary.json
+          if-no-files-found: error
+          retention-days: 30
 
       - run: npm run build
         env:

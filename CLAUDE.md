@@ -14,17 +14,20 @@ npm run preview    # serve the production build locally
 
 Or use `make`:
 ```
-make install       # npm install
-make dev           # dev server at http://localhost:5173
-make build         # production build
-make lint          # ESLint
-make test          # vitest run
-make ci            # npm ci + lint + test + build
+make install        # npm install
+make dev            # dev server at http://localhost:5173
+make build          # production build
+make lint           # ESLint
+make test           # vitest run
+make test-coverage  # vitest run --coverage (writes coverage/)
+make ci             # npm ci + lint + test:coverage + build
 ```
 
 Test suite: `npm test` (Vitest + Testing Library). Single file:
 `npx vitest run src/api.test.js`. Single test by name: `npx vitest run -t
-"<test name>"`. Watch mode: `npm run test:watch`.
+"<test name>"`. Watch mode: `npm run test:watch`. Coverage report:
+`npm run test:coverage` (writes `coverage/coverage-summary.json`, consumed
+by `/housekeeping`'s Check 7).
 
 `.claude/agents/`, `.claude/skills/`, `.claude/plans/`, `.claude/dreaming/`,
 and `.claude/context-essentials.md` are git-tracked (explicitly un-ignored

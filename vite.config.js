@@ -38,6 +38,24 @@ export default defineConfig(({ mode }) => {
       globals: true,
       css: false,
       setupFiles: ['./src/test-setup.js'],
+      coverage: {
+        provider: 'v8',
+        // Vitest 4 dropped `coverage.all` — with no explicit `include`, only
+        // files a test actually imports get reported, so a new untested file
+        // would leave the total % flat and /housekeeping's Check 7 delta
+        // would miss the regression. Enumerate the real source surface
+        // instead.
+        include: ['src/**/*.{js,jsx}'],
+        exclude: [
+          'src/**/*.test.{js,jsx}',
+          'src/test-setup.js',
+          'src/main.jsx',
+        ],
+        // text -> readable in CI logs; json-summary -> the single machine-
+        // readable total /housekeeping's Check 7 parses. No `thresholds` —
+        // enforcement is explicitly out of scope for this change.
+        reporter: ['text', 'json-summary'],
+      },
     },
   }
 })
