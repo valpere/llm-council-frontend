@@ -79,10 +79,11 @@ already be running.
 ## Other commands
 
 ```bash
-npm run build     # production build → dist/
-npm run preview   # serve the production build locally
-npm run lint      # ESLint
-npm test          # Vitest
+npm run build           # production build → dist/
+npm run preview         # serve the production build locally
+npm run lint            # ESLint
+npm test                # Vitest
+npm run test:coverage   # Vitest + coverage report
 ```
 
 ---

@@ -125,25 +125,68 @@ grep -rn --include="*.md" -oE "React [0-9]+|Vite [0-9]+" .claude/ docs/ CLAUDE.m
 
 ### Check 7 — CI Coverage Delta
 
-**PLANNED** — not yet functional. `.github/workflows/ci.yml` exists and runs
-`npm test` (`vitest run`), but neither `vite.config.js`'s `test` block nor
-`package.json`'s `test` script enables Vitest's `--coverage` flag, so there
-is no coverage artifact to diff against. Wiring actual coverage collection
-is separate follow-up work (check `vite.config.js` first if picking this
-up), not bundled into this skill's initial install.
+**Goal:** total line coverage on `main` must not go down.
 
-Once coverage collection exists:
+Compares the `coverage-summary` artifact from the two most recent
+successful `main` runs of `.github/workflows/ci.yml` (produced by its
+`push`/`workflow_dispatch` triggers). Requires `gh` (authenticated) and
+`jq`; degrades to SKIP without them.
 
 ```bash
-# Detect: gh run list --workflow=ci.yml, download coverage artifact,
-# compare total line % between the last two successful main runs.
-gh run list --workflow=ci.yml --status=completed --limit=5 \
-  --json databaseId,headBranch,conclusion 2>/dev/null
+STATUS=SKIP; DETAIL="coverage artifact not available"
+
+if command -v gh >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+  # `--branch main` (not `--event push`) so on-demand `workflow_dispatch`
+  # seed-runs also count. Safe here: pull_request runs report the PR's
+  # source branch as headBranch, and no PR ever originates from main.
+  RUN_IDS=$(gh run list --workflow=ci.yml --branch main --status success \
+    --limit 2 --json databaseId --jq '.[].databaseId' 2>/dev/null)
+
+  if [ "$(printf '%s\n' "$RUN_IDS" | grep -c '.')" -eq 2 ]; then
+    NEW_ID=$(printf '%s\n' "$RUN_IDS" | sed -n 1p)
+    OLD_ID=$(printf '%s\n' "$RUN_IDS" | sed -n 2p)
+    TMP=$(mktemp -d)
+    trap 'rm -rf "$TMP"' EXIT   # guaranteed cleanup on any exit path
+
+    if gh run download "$NEW_ID" -n coverage-summary -D "$TMP/new" 2>/dev/null &&
+       gh run download "$OLD_ID" -n coverage-summary -D "$TMP/old" 2>/dev/null; then
+      NEW_PCT=$(jq -r '.total.lines.pct' "$TMP/new/coverage-summary.json" 2>/dev/null)
+      OLD_PCT=$(jq -r '.total.lines.pct' "$TMP/old/coverage-summary.json" 2>/dev/null)
+
+      case "$NEW_PCT$OLD_PCT" in
+        ''|*null*) : ;;   # unparseable summary -> stay SKIP
+        *)
+          DELTA=$(awk -v n="$NEW_PCT" -v o="$OLD_PCT" 'BEGIN{printf "%+.2f", n-o}')
+          if awk -v n="$NEW_PCT" -v o="$OLD_PCT" 'BEGIN{exit !(n>=o)}'; then
+            STATUS=PASS; DETAIL="${NEW_PCT}% lines (delta: ${DELTA} vs previous main)"
+          else
+            STATUS=FAIL; DETAIL="${NEW_PCT}% lines (delta: ${DELTA} — coverage regressed)"
+          fi
+          ;;
+      esac
+    else
+      DETAIL="coverage artifact missing or expired on run $NEW_ID / $OLD_ID"
+    fi
+
+    rm -rf "$TMP"
+  else
+    DETAIL="fewer than 2 successful main runs with coverage"
+  fi
+else
+  DETAIL="gh or jq unavailable"
+fi
 ```
 
-- `DELTA >= 0`: Pass — "N% coverage (delta: +M%)"
-- `DELTA < 0`: Fail — "N% coverage (delta: -M% — coverage regressed)"
-- Unable to compare: SKIP — "coverage artifact not available"
+- `DELTA >= 0`: Pass — "N% lines (delta: +M vs previous main)"
+- `DELTA < 0`: Fail — "N% lines (delta: -M — coverage regressed)"
+- Unable to compare: SKIP — reason in Detail
+
+**Scope note:** this is a *main-to-main historical* delta. It does not
+evaluate whether the current working branch regresses coverage — that
+would need a PR-vs-main gate in CI, which is separate work.
+
+**Optional tolerance:** v8 percentages can wiggle by hundredths. To avoid
+flapping FAILs, relax the comparison to `!(n >= o - 0.1)`.
 
 ---
 
@@ -160,16 +203,22 @@ gh run list --workflow=ci.yml --status=completed --limit=5 \
 | Tracked backup files      | PASS | — |
 | TODO/FIXME count           | INFO | 6 TODO/FIXME comments |
 | Framework version drift    | PASS | — |
-| CI coverage delta          | SKIP | PLANNED — coverage collection not wired up |
+| CI coverage delta          | PASS | 71.42% lines (delta: +0.31 vs previous main) |
 
-**5 passed, 0 failed** (1 informational, 1 skipped)
+**6 passed, 0 failed** (1 informational)
 ```
+
+Check 7 legitimately reports SKIP when fewer than two successful `main`
+runs carry a live coverage artifact (e.g. right after this check was
+wired up, or after 30-day artifact expiry during a quiet period) — SKIP
+still never counts as a failure.
 
 Status values:
 - `PASS` — check succeeded
 - `FAIL` — check failed (must be addressed)
 - `INFO` — informational only, never counted as failed
-- `SKIP` — could not run (missing tools, no artifacts, or marked PLANNED)
+- `SKIP` — could not run (missing tools, no artifacts, or fewer than 2
+  comparable main runs)
 
 Summary: `N passed, M failed` — with optional `(K informational, J skipped)`.
 
@@ -177,7 +226,10 @@ Summary: `N passed, M failed` — with optional `(K informational, J skipped)`.
 
 ## RULES
 
-1. **Read-only** — never modify files, commit, push, or open a PR.
+1. **Read-only** — never modify files in the repository, commit, push, or
+   open a PR. Check 7 downloads artifacts into a `mktemp -d` scratch
+   directory outside the repo and removes it before returning; that is
+   the only permitted write.
 2. **Run from repo root** — all paths relative to repository root.
 3. **INFO checks never count as failures** (TODO/FIXME is always INFO).
 4. **SKIP is not failure** — a skipped or PLANNED check doesn't increment failed count.

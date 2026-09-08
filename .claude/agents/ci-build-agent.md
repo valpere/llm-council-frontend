@@ -33,7 +33,7 @@ When you encounter failures outside your scope, diagnose and escalate — never 
 ```
 npm ci
 npm run lint
-npm test
+npm run test:coverage
 npm run build
 ```
 
@@ -48,7 +48,7 @@ All workflows live in `.github/workflows/`.
 
 | File | Purpose |
 |------|---------|
-| `ci.yml` | Pull request validation (lint + build) |
+| `ci.yml` | PR + main-push validation (lint + test:coverage + build) |
 | `deploy-staging.yml` | Staging deploy on push to main |
 | `deploy-prod.yml` | Production deploy with manual approval |
 
@@ -60,12 +60,17 @@ All workflows live in `.github/workflows/`.
 name: CI
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a main run — each successful main run is a coverage data
+  # point for /housekeeping's Check 7 (CI Coverage Delta).
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   validate:
@@ -83,6 +88,16 @@ jobs:
 
       - run: npm run lint
 
+      - run: npm run test:coverage
+
+      - name: Upload coverage summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-summary
+          path: coverage/coverage-summary.json
+          if-no-files-found: error
+          retention-days: 30
+
       - run: npm run build
         env:
           VITE_API_BASE: ${{ secrets.VITE_API_BASE }}
@@ -99,7 +114,7 @@ jobs:
 5. **NEVER hardcode secret values** — always use `${{ secrets.* }}`
 6. **Production gate**: always use `environment: production` for prod deploys
 7. **No `npm install`** in CI — always `npm ci`
-8. **Include `npm test`** (Vitest) between lint and build
+8. **Include `npm run test:coverage`** (Vitest + coverage artifact upload) between lint and build
 
 ---
 
@@ -131,7 +146,7 @@ jobs:
 - [ ] No hardcoded secret values
 - [ ] All secrets use `${{ secrets.* }}` syntax
 - [ ] Concurrency cancellation block is present
-- [ ] `npm test` step is present (between lint and build)
+- [ ] `npm run test:coverage` step is present (between lint and build), with a coverage-summary artifact upload
 - [ ] No files outside `.github/workflows/` were modified
 
 ---

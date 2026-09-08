@@ -92,7 +92,7 @@ Walks each finding interactively, routes load-bearing items through `/backlog` +
 
 **When to use:** any time for a hygiene snapshot.
 
-Read-only pass/fail table covering: stale branches, debug output in source, tracked `.env`/backup files, TODO/FIXME count, framework version drift in docs, and CI coverage delta (when wired).
+Read-only pass/fail table covering: stale branches, debug output in source, tracked `.env`/backup files, TODO/FIXME count, framework version drift in docs, and CI coverage delta (main-to-main historical, via `gh run` artifacts).
 
 ### `/self-learn` — Mistake/win logging
 
@@ -188,7 +188,7 @@ Produces RFC 2119-compliant GitHub issue draft text (does not create the issue d
 
 **When invoked:** when a GitHub Actions workflow needs to be created or modified; when CI fails due to workflow configuration.
 
-Only modifies `.github/workflows/`. Uses `npm ci`, Node 22, concurrency cancellation. Should include a `npm test` step (Vitest suite).
+Only modifies `.github/workflows/`. Uses `npm ci`, Node 22, concurrency cancellation. Should include a `npm run test:coverage` step (Vitest suite + coverage artifact upload).
 
 ### `test-generator` — Generate colocated tests
 
