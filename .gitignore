@@ -47,6 +47,11 @@ coverage/
 # /self-learn pattern data — local learning log, not source
 _patterns/*.jsonl
 
+# /fix-review telemetry — runtime log of per-round model/finding stats,
+# not source; grows with every fix-review run, same category as
+# _patterns/*.jsonl above
+.claude/skills/fix-review/telemetry.jsonl
+
 # graphify generated artifacts — rebuilt via git hooks, not source
 graphify-out/
 
